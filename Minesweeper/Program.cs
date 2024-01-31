@@ -5,9 +5,16 @@ namespace Minesweeper
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var app = builder.Build();
+            builder.Services.AddControllersWithViews()
+                            .AddRazorRuntimeCompilation();
 
-            app.MapGet("/", () => "Hello World!");
+            var app = builder.Build();
+            app.UseStaticFiles();
+            app.UseRouting();
+
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }
