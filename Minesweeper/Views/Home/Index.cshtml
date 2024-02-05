@@ -4,15 +4,22 @@
 	<title>three.js webgl - lights - physical lights</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<link type="text/css" rel="stylesheet" href="main.css">
+	<link type="text/css" rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
 	<div id="container"></div>
 	<div id="info">
-		 Welcome to Mineseeper! To start a new game come up to the wall and click on a cell. 
+		<!-- Welcome to Mineseeper! To start a new game come up to the wall and click on a cell. -->
 	</div>
 
 	<script defer src="/js/ApiClient.js"></script>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "/lib/three/three.module.js"
+			}
+		}
+	</script>
+	<script defer type="module" src="/js/Minesweeper.js"></script>
 </body>
 </html>
