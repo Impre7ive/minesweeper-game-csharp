@@ -120,22 +120,68 @@ function initMineField() {
 	let cellObjects = [];
 	let parentObject = new THREE.Group();
 	// Create clickable objects for each cell
-	for (var i = 0; i < divisions; i++) {
-		for (var j = 0; j < divisions; j++) {
+	for (let i = 0; i < divisions; i++) {
+		for (let j = 0; j < divisions; j++) {
 			let geometry = new THREE.BoxGeometry(size / divisions, size / divisions, 0.1);	
-			let material = new THREE.MeshStandardMaterial({
+		/*	let material = new THREE.MeshStandardMaterial({
 				color: 0xffffff,
 				metalness: 1, 
 				roughness: 0.5 
-			});
+			});*/
 
-			let cell = new THREE.Mesh(geometry, material);
+			geometry.addGroup(0, Infinity, 0);
+			geometry.addGroup(0, Infinity, 1);
+
+			let mat = [
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				//new THREE.MeshBasicMaterial({ map: textureLoader.faceNormalMap, alphaTest: 0.5 }),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				}),
+				new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				})
+			];
+
+			let cell = new THREE.Mesh(geometry, mat);
 			cell.castShadow = true;
 			let offsetY = (size / divisions - 2.2 * size / (divisions)) * i + 2;
 			let offsetZ = (size / divisions - 2.2 * size / (divisions)) * j;
 			cell.position.set(0, offsetY, offsetZ);
-			cell.rotation.y = Math.PI / 2;
-			cell.userData = { row: i, column: j }; // Store row and column information
+			cell.rotation.y = -Math.PI / 2;
+			cell.rotation.z = -Math.PI / 2;
+
+
+
+			cell.userData = { x: i, y: j }; // Store row and column information
 			//scene.add(cell);
 			cellObjects.push(cell);
 		}
@@ -145,8 +191,10 @@ function initMineField() {
 		parentObject.add(object);
 	});
 	parentObject.position.x = 0.03;
-	parentObject.position.y = 0.4;
-	parentObject.position.z = 1.2;
+	parentObject.position.y = 2.4;
+	parentObject.position.z = 1.0;
+
+	parentObject.rotation.x = -Math.PI / 2;
 
 	return parentObject;
 }
@@ -341,9 +389,9 @@ const textLoader = {
 	loader: new FontLoader(),
 	timerMesh: null,
 	mineCounterMesh: null,
-	textMaterials: [ // text
-		new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true }), // front
-		new THREE.MeshPhongMaterial({ color: 0xffffff }) // side
+	textMaterials: [ 
+		new THREE.MeshPhongMaterial({ color: 0xffffff, flatShading: true }), 
+		new THREE.MeshPhongMaterial({ color: 0xffffff }) 
 	],
 	font: '/fonts/droid_sans_regular.typeface.json',
 	initTimerMesh: function () {
@@ -394,7 +442,7 @@ animate();
 
 function onDocumentMouseDown(event) {
 	event.preventDefault();
-	var mouse = new THREE.Vector2();
+	let mouse = new THREE.Vector2();
 	mouse.x = (event.clientX / gameScene.renderer.domElement.clientWidth) * 2 - 1;
 	mouse.y = - (event.clientY / gameScene.renderer.domElement.clientHeight) * 2 + 1;
 
@@ -407,15 +455,73 @@ function onDocumentMouseDown(event) {
 
 	textureLoader.faceBoxMaterial[4].needsUpdate = true;
 
-	var raycaster = new THREE.Raycaster();
+	let raycaster = new THREE.Raycaster();
 	raycaster.setFromCamera(mouse, gameScene.camera);
 
-	var intersects = raycaster.intersectObjects([gameScene.mineField], true);
+	let intersects = raycaster.intersectObjects([gameScene.mineField], true);
 	if (intersects.length > 0) {
-		var cell = intersects[0].object;
-		console.log(cell.userData);
+		let cell = intersects[0].object;
+		//console.log(cell.userData);
 		// Change the color of the clicked cell
-		cell.material.color.set(0xff0000); // Set the color to red
+
+		let tmp = api.checkCell(cell.userData, (result) => {
+			console.log(result);
+
+			if (result.isExplosion) {
+				result.cells.forEach((cell) => {
+					gameScene.mineField.children[(cell.Column * 12) + cell.Row].material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.faceNormalMap, alphaTest: 0.5 }); //.color.set();//0xff0000
+				});
+			}
+			else {
+				result.cells.forEach((cell) => {
+					let color = 0x0000ff;
+
+					switch (cell.MinesAround) {
+						case 0:
+							color = 0x00333366;
+							break;
+						case 1:
+							color = 0x000099FF;
+							break;
+						case 2:
+							color = 0x0000CC00;
+							break;
+						case 3:
+							color = 0x00FF0000;
+							break;
+						case 4:
+							color = 0x0000ff;
+							break;
+						case 5:
+							color = 0x00990000;
+							break;
+						case 6:
+							color = 0x0066FFFF;
+							break;
+						case 7:
+							color = 0x00000000;
+							break;
+						case 8:
+							color = 0x00FF0066;
+							break;
+					}
+
+					gameScene.mineField.children[(cell.Column * 12) + cell.Row].material[4].color.set(color);
+				});
+			}
+
+			//MinesAround
+
+		});
+
+
+
+		//cell.material[1].color.set(0xff0000); // Set the color to red
+	/*	cell.material[1] = new THREE.MeshStandardMaterial({
+			color: 0x00ffff,
+			metalness: 1,
+			roughness: 0.5,
+		});*/
 	}
 }
 
@@ -439,3 +545,6 @@ function render() {
 	gameScene.lightBulb.position.set(x, 2, z);
 	gameScene.renderer.render(gameScene.scene, gameScene.camera);
 }
+
+let api = new ApiClient(12, 5);
+api.startGame();

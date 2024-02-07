@@ -8,7 +8,7 @@ class ApiClient {
 
     startGame() {
         let model = {
-            timestamp: new Date().toUTCString(),
+            timestamp: new Date().toISOString(),
             fieldSize: this.fieldSize,
             mineNumber: this.mineNumber
         };
@@ -16,11 +16,11 @@ class ApiClient {
         this.sendRequest(this.#initializationPath, model);
     }
 
-    checkCell(cellCoordinates) {//cell determines {x, y}
-        this.sendRequest(this.#checkCell, cellCoordinates);
+    checkCell(cellCoordinates, callback) {
+        return this.sendRequest(this.#checkCell, cellCoordinates, callback);
     }
 
-    sendRequest(path, model) {
+    sendRequest(path, model, callback) {
         fetch(`${path}`, {
             method: 'POST',
             body: JSON.stringify(model),
@@ -31,21 +31,33 @@ class ApiClient {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                let result = {
-                    cells: data.cells,
-                    isGameOver: data.isGameOver,
-                    isExplosion: data.isExplosion
-                };
+                if (data.success && data.empty !== true) {     
+                    let response = JSON.parse(data.response);
+
+                    let result = {
+                        cells: response.Cells,
+                        isGameOver: response.IsGameOver,
+                        isExplosion: response.IsExplosion,
+                        time: response.time
+                    };
+
+                    if (result.isGameOver && result.isExplosion) {
+                        alert('You lose');
+                    }
+
+                    if (result.isGameOver && !result.isExplosion) {
+                        alert('You win');
+                    }
+
+                if (typeof callback === 'function') {
+                    callback(result);
+                }
 
                 return result;
             } else {
-                alert("Something went wrong!");
                 return null;
             }
         });
     }
 }
 
-let api = new ApiClient(2, 2);
-api.startGame();
