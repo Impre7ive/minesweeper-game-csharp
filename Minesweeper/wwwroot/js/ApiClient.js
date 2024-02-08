@@ -31,23 +31,15 @@ class ApiClient {
         })
         .then(response => response.json())
         .then(data => {
-                if (data.success && data.empty !== true) {     
-                    let response = JSON.parse(data.response);
+            if (data.success && data.empty !== true) {     
+                let response = JSON.parse(data.response);
 
-                    let result = {
-                        cells: response.Cells,
-                        isGameOver: response.IsGameOver,
-                        isExplosion: response.IsExplosion,
-                        time: response.time
-                    };
-
-                    if (result.isGameOver && result.isExplosion) {
-                        alert('You lose');
-                    }
-
-                    if (result.isGameOver && !result.isExplosion) {
-                        alert('You win');
-                    }
+                let result = {
+                    cells: response.Cells,
+                    isGameOver: response.IsGameOver,
+                    isExplosion: response.IsExplosion,
+                    time: response.time
+                };
 
                 if (typeof callback === 'function') {
                     callback(result);
