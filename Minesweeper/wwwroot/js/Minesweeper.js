@@ -2,9 +2,9 @@ import * as THREE from '/lib/three/three.module.js';
 import { FontLoader } from '/lib/FontLoader.js';
 import { TextGeometry } from '/lib/TextGeometry.js';
 
-const gameInitialParameters = {
-	mines: 5,
-	fieldSize: 12
+var gameInitialParameters = {
+	mines: 15,
+	fieldSize: 10
 };
 
 const light = {
@@ -79,7 +79,7 @@ const visualization = {
 		requestAnimationFrame(() => this.animate());
 		this.render();
 	},
-	getCursorCollisionsWithGameField: function (event) {
+	getCursorCollisionsWithGameField: function (event, object) {
 		let mouse = new THREE.Vector2();
 		mouse.x = (event.clientX / visualization.renderer.domElement.clientWidth) * 2 - 1;
 		mouse.y = - (event.clientY / visualization.renderer.domElement.clientHeight) * 2 + 1;
@@ -87,7 +87,7 @@ const visualization = {
 		let raycaster = new THREE.Raycaster();
 		raycaster.setFromCamera(mouse, visualization.camera);
 
-		return raycaster.intersectObjects([sceneObjects.mineField], true);	
+		return raycaster.intersectObjects([object], true);	
 	}
 };
 
@@ -100,6 +100,8 @@ const sceneObjects = {
 	mineCounter: null,
 	timerMesh: null,
 	mineCounterMesh: null,
+	exitButton: null,
+	exitButtonTextMesh: null,
 	initFloor: function() {
 		let floorMaterial = textureLoader.floorMaterial;
 		let floorGeometry = new THREE.PlaneGeometry(20, 20);
@@ -149,12 +151,33 @@ const sceneObjects = {
 
 		this.timetable = group;
 	},
-	initMineCounter: function() {
-		let minesCounterGeometry = new THREE.BoxGeometry(0.1, 0.4, 0.8);
+	initExitButton: function() {
+		let minesCounterGeometry = new THREE.BoxGeometry(0.1, 0.4, 0.7);
 		let minesCounterMaterial = new THREE.MeshStandardMaterial({
 			color: 0x0000ff,
 			metalness: 1, 
 			roughness: 0.5 
+		});
+		let exitButtonMesh = new THREE.Mesh(minesCounterGeometry, minesCounterMaterial);
+		exitButtonMesh.position.set(0.03, 0.34, -1.5);
+		exitButtonMesh.castShadow = true;
+
+		this.exitButtonTextMesh = textLoader.initExitMesh();
+
+		let group = new THREE.Group();
+		group.add(this.exitButtonTextMesh);
+		group.add(exitButtonMesh);
+
+		textLoader.changeTextGeometry(this.exitButtonTextMesh, 'Exit', () => {});
+
+		this.exitButton = group;
+	},
+	initMineCounter: function () {
+		let minesCounterGeometry = new THREE.BoxGeometry(0.1, 0.4, 0.8);
+		let minesCounterMaterial = new THREE.MeshStandardMaterial({
+			color: 0x0000ff,
+			metalness: 1,
+			roughness: 0.5
 		});
 		let minesCounterMesh = new THREE.Mesh(minesCounterGeometry, minesCounterMaterial);
 		minesCounterMesh.position.set(0.03, 2.8, -0.7);
@@ -166,19 +189,19 @@ const sceneObjects = {
 		group.add(this.mineCounterMesh);
 		group.add(minesCounterMesh);
 
-		textLoader.changeTextGeometry(this.mineCounterMesh, '010', () => {});
+		textLoader.changeTextGeometry(this.mineCounterMesh, '010', () => { });
 
 		this.mineCounter = group;
 	},
 	initMineField: function() {
-		let size = 2;
-		let divisions = 12;
+		let divisions = gameInitialParameters.fieldSize;
+		let size = 2.36 / divisions;
 		let cellObjects = [];
 		let parentObject = new THREE.Group();
 		// Create clickable objects for each cell
 		for (let i = 0; i < divisions; i++) {
 			for (let j = 0; j < divisions; j++) {
-				let geometry = new THREE.BoxGeometry(size / divisions, size / divisions, 0.1);
+				let geometry = new THREE.BoxGeometry(size, size, 0.1);
 
 				geometry.addGroup(0, Infinity, 0);
 				geometry.addGroup(0, Infinity, 1);
@@ -223,16 +246,15 @@ const sceneObjects = {
 
 				let cell = new THREE.Mesh(geometry, mat);
 				cell.castShadow = true;
-				let offsetY = (size / divisions - 2.2 * size / (divisions)) * i + 2;
-				let offsetZ = (size / divisions - 2.2 * size / (divisions)) * j;
+
+				let offsetY = size * i; 
+				let offsetZ = size * j;
+
 				cell.position.set(0, offsetY, offsetZ);
 				cell.rotation.y = -Math.PI / 2;
 				cell.rotation.z = -Math.PI / 2;
 
-
-
-				cell.userData = { x: i, y: j }; // Store row and column information
-				//scene.add(cell);
+				cell.userData = { x: i, y: j }; 
 				cellObjects.push(cell);
 			}
 		}
@@ -240,9 +262,9 @@ const sceneObjects = {
 		cellObjects.forEach(function (object) {
 			parentObject.add(object);
 		});
-		parentObject.position.x = 0.03;
-		parentObject.position.y = 2.4;
-		parentObject.position.z = 1.0;
+		parentObject.position.x = 0;
+		parentObject.position.y = 0.28;
+		parentObject.position.z = 1.16;
 
 		parentObject.rotation.x = -Math.PI / 2;
 
@@ -447,6 +469,7 @@ const gameScene = {
 		sceneObjects.initTimer();
 		sceneObjects.initFace();
 		sceneObjects.initMineCounter();
+		sceneObjects.initExitButton();
 
 		this.scene.add(light.lightBulb);
 		this.scene.add(light.globalLight);
@@ -456,8 +479,10 @@ const gameScene = {
 		this.scene.add(sceneObjects.timetable);
 		this.scene.add(sceneObjects.face);
 		this.scene.add(sceneObjects.mineCounter);
+		this.scene.add(sceneObjects.exitButton);
 
 		document.addEventListener('mouseup', this.onDocumentMouseUp);
+		document.addEventListener('mouseup', this.exitApp);
 		document.addEventListener('mousemove', this.backgroundMusic);
 		document.addEventListener('mousedown', this.setScaredFace);
 
@@ -468,6 +493,21 @@ const gameScene = {
 		visualization.initCamera();
 		visualization.initRenderer();
 		visualization.animate();
+	},
+	exitApp: function (event) {
+		let collisions = visualization.getCursorCollisionsWithGameField(event, sceneObjects.exitButton);
+
+		if (collisions.length > 0) {
+			var audio = new Audio();
+			audio.src = '/audio/exit.mp3';
+			audio.autoplay = true;
+			audio.volume = 0.5;
+			document.body.appendChild(audio);
+
+			setTimeout(() => {
+				window.location.reload();
+			}, 1500);
+		}
 	},
 	adjustMineCounter: function (mines) {
 		let mineCounter = this.getTabloNumber(mines);
@@ -489,7 +529,7 @@ const gameScene = {
 		event.preventDefault();
 
 		if (event.button === 0) {
-			let collisions = visualization.getCursorCollisionsWithGameField(event);
+			let collisions = visualization.getCursorCollisionsWithGameField(event, sceneObjects.mineField);
 
 			if (textureLoader.faceBoxMaterial[4].map !== textureLoader.faceScaredMap && !gameScene.isGameOver && collisions.length > 0) {
 				textureLoader.faceBoxMaterial[4].map = textureLoader.faceScaredMap;
@@ -514,7 +554,7 @@ const gameScene = {
 	onDocumentMouseUp: function(event) {
 		event.preventDefault();
 		
-		let collisions = visualization.getCursorCollisionsWithGameField(event);
+		let collisions = visualization.getCursorCollisionsWithGameField(event, sceneObjects.mineField);
 
 		if (collisions.length > 0) {
 			let cell = collisions[0].object;
@@ -525,11 +565,14 @@ const gameScene = {
 					if (result.isGameOver && result.isExplosion) {
 						gameScene.isGameOver = true;
 						console.log('you lose');
-						result.cells.forEach((cell) => {
+						result.cells.forEach((cell, i) => {
 							gameScene.setDeadFace();
-							gameScene.ExplosionSound();
 							gameScene.stopTimer();
-							sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.mineMap, alphaTest: 0.5 });
+
+							setTimeout(() => {
+								gameScene.ExplosionSound();
+								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.mineMap, alphaTest: 0.5 });
+							}, i * 500);
 						});
 					} else if (result.isGameOver && !result.isExplosion) {
 						gameScene.isGameOver = true;
@@ -540,9 +583,9 @@ const gameScene = {
 						gameScene.setNormalFace();
 
 						result.cells.forEach((cell) => {
-							if (sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].userData.isFlagged) {
-								sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].userData.isFlagged = false;
-								sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].material[4] = new THREE.MeshStandardMaterial({
+							if (sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isFlagged) {
+								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isFlagged = false;
+								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4] = new THREE.MeshStandardMaterial({
 									color: 0xffffff,
 									metalness: 1,
 									roughness: 0.5,
@@ -552,8 +595,8 @@ const gameScene = {
 							}
 
 							let color = textureLoader.pickColor(cell);
-							sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].userData.isOpen = true;
-							sceneObjects.mineField.children[(cell.Column * 12) + cell.Row].material[4].color.set(color);
+							sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isOpen = true;
+							sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4].color.set(color);
 						});
 					}
 				});
@@ -594,7 +637,7 @@ const gameScene = {
 		var audio = new Audio();
 		audio.src = '/audio/explosion.mp3';
 		audio.autoplay = true;
-		audio.volume = 0.1;
+		audio.volume = 0.5;
 		document.body.appendChild(audio);
 	}
 }
@@ -618,6 +661,14 @@ const textLoader = {
 		let textGeo = new TextGeometry('');
 		let textMesh = new THREE.Mesh(textGeo, this.textMaterials);
 		textMesh.position.set(0.07, 2.65, -1.04);
+		textMesh.rotation.y = -Math.PI / 2;
+		textMesh.visible = false;
+		return textMesh;
+	},
+	initExitMesh: function () {
+		let textGeo = new TextGeometry('');
+		let textMesh = new THREE.Mesh(textGeo, this.textMaterials);
+		textMesh.position.set(0.07, 0.2, -1.85);
 		textMesh.rotation.y = -Math.PI / 2;
 		textMesh.visible = false;
 		return textMesh;
