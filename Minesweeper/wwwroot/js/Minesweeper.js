@@ -2,7 +2,8 @@ import * as THREE from '/lib/three/three.module.js';
 import { FontLoader } from '/lib/FontLoader.js';
 import { TextGeometry } from '/lib/TextGeometry.js';
 
-var gameInitialParameters = {
+let api;
+let gameInitialParameters = {
 	mines: 15,
 	fieldSize: 10
 };
@@ -699,11 +700,20 @@ const textLoader = {
 }
 
 
-gameScene.initScene();
-let api = new ApiClient(gameInitialParameters.fieldSize, gameInitialParameters.mines);
-api.startGame();
+document.getElementById('minesweeper-form').addEventListener('submit', function (event) {
+	event.preventDefault();
 
+	let selectedOption = document.querySelector('input[name="option"]:checked').value;
+
+	this.classList.add('hidden');
+	document.getElementById('container').classList.remove('hidden');
+
+	gameInitialParameters.mines = selectedOption;
+	gameScene.initScene();
+	api = new ApiClient(gameInitialParameters.fieldSize, gameInitialParameters.mines);
+	api.startGame();
+});
 
 document.addEventListener("contextmenu", function (event) {
-	event.preventDefault(); // Prevent the default context menu from appearing
+	event.preventDefault(); 
 });
