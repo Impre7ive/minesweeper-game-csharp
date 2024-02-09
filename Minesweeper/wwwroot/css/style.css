@@ -32,18 +32,18 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-    .form label {
-        display: block;
-        margin-bottom: 10px;
-    }
+.form label {
+    display: block;
+    margin-bottom: 10px;
+}
 
-    .form button {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-    }
+.form button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
