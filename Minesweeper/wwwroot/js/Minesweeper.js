@@ -86,7 +86,7 @@ const visualization = {
 		mouse.y = - (event.clientY / visualization.renderer.domElement.clientHeight) * 2 + 1;
 
 		let raycaster = new THREE.Raycaster();
-		raycaster.setFromCamera(mouse, visualization.camera);
+		raycaster.setFromCamera(mouse, this.camera);
 
 		return raycaster.intersectObjects([object], true);	
 	}
@@ -138,17 +138,17 @@ const sceneObjects = {
 			metalness: 1,
 			roughness: 0.5
 		});
+
 		let timetableMesh = new THREE.Mesh(timetableGeometry, timetableMaterial);
 		timetableMesh.position.set(0.03, 2.8, 0.9);
 		timetableMesh.castShadow = true;
-
 		this.timerMesh = textLoader.initTimerMesh();
 
 		let group = new THREE.Group();
 		group.add(this.timerMesh);
 		group.add(timetableMesh);
 
-		textLoader.changeTextGeometry(this.timerMesh, '000', () => {});
+		textLoader.changeTextGeometry(this.timerMesh, '000', () => { });
 
 		this.timetable = group;
 	},
@@ -159,10 +159,10 @@ const sceneObjects = {
 			metalness: 1, 
 			roughness: 0.5 
 		});
+
 		let exitButtonMesh = new THREE.Mesh(minesCounterGeometry, minesCounterMaterial);
 		exitButtonMesh.position.set(0.03, 0.34, -1.5);
 		exitButtonMesh.castShadow = true;
-
 		this.exitButtonTextMesh = textLoader.initExitMesh();
 
 		let group = new THREE.Group();
@@ -180,10 +180,10 @@ const sceneObjects = {
 			metalness: 1,
 			roughness: 0.5
 		});
+
 		let minesCounterMesh = new THREE.Mesh(minesCounterGeometry, minesCounterMaterial);
 		minesCounterMesh.position.set(0.03, 2.8, -0.7);
 		minesCounterMesh.castShadow = true;
-
 		this.mineCounterMesh = textLoader.initMineCounterMesh();
 
 		let group = new THREE.Group();
@@ -199,11 +199,10 @@ const sceneObjects = {
 		let size = 2.36 / divisions;
 		let cellObjects = [];
 		let parentObject = new THREE.Group();
-		// Create clickable objects for each cell
+
 		for (let i = 0; i < divisions; i++) {
 			for (let j = 0; j < divisions; j++) {
 				let geometry = new THREE.BoxGeometry(size, size, 0.1);
-
 				geometry.addGroup(0, Infinity, 0);
 				geometry.addGroup(0, Infinity, 1);
 
@@ -263,10 +262,10 @@ const sceneObjects = {
 		cellObjects.forEach(function (object) {
 			parentObject.add(object);
 		});
+
 		parentObject.position.x = 0;
 		parentObject.position.y = 0.28;
 		parentObject.position.z = 1.16;
-
 		parentObject.rotation.x = -Math.PI / 2;
 
 		this.mineField = parentObject;
@@ -326,6 +325,7 @@ const textureLoader = {
 			metalness: 0.2,
 			bumpScale: 1
 		});
+
 		this.loader.load('textures/hardwood2_diffuse.jpg', (map) => {
 			map.wrapS = THREE.RepeatWrapping;
 			map.wrapT = THREE.RepeatWrapping;
@@ -335,6 +335,7 @@ const textureLoader = {
 			this.floorMaterial.map = map;
 			this.floorMaterial.needsUpdate = true;
 		});
+
 		this.loader.load('textures/hardwood2_bump.jpg', (map) => {
 			map.wrapS = THREE.RepeatWrapping;
 			map.wrapT = THREE.RepeatWrapping;
@@ -343,6 +344,7 @@ const textureLoader = {
 			this.floorMaterial.bumpMap = map;
 			this.floorMaterial.needsUpdate = true;
 		});
+
 		this.loader.load('textures/hardwood2_roughness.jpg', (map) => {
 			map.wrapS = THREE.RepeatWrapping;
 			map.wrapT = THREE.RepeatWrapping;
@@ -358,6 +360,7 @@ const textureLoader = {
 			bumpScale: 1,
 			metalness: 0.2
 		});
+
 		this.loader.load('textures/brick_diffuse.jpg', (map) => {
 			map.wrapS = THREE.RepeatWrapping;
 			map.wrapT = THREE.RepeatWrapping;
@@ -367,6 +370,7 @@ const textureLoader = {
 			this.wallMaterial.map = map;
 			this.wallMaterial.needsUpdate = true;
 		});
+
 		this.loader.load('textures/brick_bump.jpg', (map) => {
 			map.wrapS = THREE.RepeatWrapping;
 			map.wrapT = THREE.RepeatWrapping;
@@ -459,10 +463,11 @@ const gameScene = {
 	initScene: function () {
 		this.scene = new THREE.Scene();
 		this.scene.fog = new THREE.Fog(0x000000, 250, 1400);
-		textureLoader.initStaticTextures();
 
 		light.initLightBulb();
 		light.initGlobalLight();
+
+		textureLoader.initStaticTextures();
 
 		sceneObjects.initFloor();
 		sceneObjects.initWall();
@@ -484,12 +489,12 @@ const gameScene = {
 
 		document.addEventListener('mouseup', this.onDocumentMouseUp);
 		document.addEventListener('mouseup', this.exitApp);
-		document.addEventListener('mousemove', this.backgroundMusic);
 		document.addEventListener('mousedown', this.setScaredFace);
 
 		this.setNormalFace();
 		this.startTimer();
 		this.adjustMineCounter(gameInitialParameters.mines);
+		this.backgroundMusic();
 
 		visualization.initCamera();
 		visualization.initRenderer();
@@ -517,6 +522,7 @@ const gameScene = {
 	},
 	startTimer: function() {
 		this.currentTime = 0;
+
 		this.timer = setInterval(() => {
 			this.currentTime++;
 			let time = this.getTabloNumber(this.currentTime);	
@@ -560,68 +566,79 @@ const gameScene = {
 		if (collisions.length > 0) {
 			let cell = collisions[0].object;
 
-			if (event.button === 0) {//left click
-				let tmp = api.checkCell(cell.userData, (result) => {
-
+			if (event.button === 0) {
+				api.checkCell(cell.userData, (result) => {
 					if (result.isGameOver && result.isExplosion) {
-						gameScene.isGameOver = true;
-						console.log('you lose');
-						result.cells.forEach((cell, i) => {
-							gameScene.setDeadFace();
-							gameScene.stopTimer();
-
-							setTimeout(() => {
-								gameScene.ExplosionSound();
-								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.mineMap, alphaTest: 0.5 });
-							}, i * 500);
-						});
+						gameScene.defeatActions(result);
 					} else if (result.isGameOver && !result.isExplosion) {
-						gameScene.isGameOver = true;
-						gameScene.setNormalFace();
-						gameScene.stopTimer();
-						console.log('you win');
+						gameScene.victoryActions();
 					} else {
-						gameScene.setNormalFace();
-
-						result.cells.forEach((cell) => {
-							if (sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isFlagged) {
-								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isFlagged = false;
-								sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4] = new THREE.MeshStandardMaterial({
-									color: 0xffffff,
-									metalness: 1,
-									roughness: 0.5,
-								});
-								gameScene.minesLeft += 1;
-								gameScene.adjustMineCounter(gameScene.minesLeft);
-							}
-
-							let color = textureLoader.pickColor(cell);
-							sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].userData.isOpen = true;
-							sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4].color.set(color);
-						});
+						gameScene.revealCells(result);
 					}
 				});
 			} else if (event.button === 2 && !gameScene.isGameOver) {
-				if (!cell.userData.isFlagged && !cell.userData.isOpen) {
-					cell.userData.isFlagged = true;
-					cell.material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.flagMap, alphaTest: 0.5 });
-					gameScene.minesLeft -= 1;
-					gameScene.adjustMineCounter(gameScene.minesLeft);
-				} else if (cell.userData.isFlagged && !cell.userData.isOpen) {
-					cell.userData.isFlagged = false;
-					cell.material[4] = textureLoader.defaultCellMesh;
-					gameScene.minesLeft += 1;
-					gameScene.adjustMineCounter(gameScene.minesLeft);
-				}
-
+				gameScene.swapFlag(cell);
 			}
-
 		} else {
 			if (!gameScene.isGameOver) {
 				gameScene.setNormalFace();
 			}
 		}
+	},
+	swapFlag: function (cell) {
+		if (!cell.userData.isFlagged && !cell.userData.isOpen) {
+			cell.userData.isFlagged = true;
+			cell.material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.flagMap, alphaTest: 0.5 });
+			gameScene.minesLeft -= 1;
+			gameScene.adjustMineCounter(gameScene.minesLeft);
+		} else if (cell.userData.isFlagged && !cell.userData.isOpen) {
+			cell.userData.isFlagged = false;
+			cell.material[4] = textureLoader.defaultCellMesh;
+			gameScene.minesLeft += 1;
+			gameScene.adjustMineCounter(gameScene.minesLeft);
+		}
+	},
+	defeatActions: function (resultCells) {
+		gameScene.isGameOver = true;
 
+		resultCells.cells.forEach((cell, i) => {
+			gameScene.setDeadFace();
+			gameScene.stopTimer();
+
+			setTimeout(() => {
+				gameScene.ExplosionSound();
+				sceneObjects.mineField.children[(cell.Column * gameInitialParameters.fieldSize) + cell.Row].material[4] = new THREE.MeshBasicMaterial({ map: textureLoader.mineMap, alphaTest: 0.5 });
+			}, i * 500);
+		});
+	},
+	victoryActions: function () {
+		gameScene.isGameOver = true;
+		gameScene.setNormalFace();
+		gameScene.stopTimer();
+		alert('You win:)');
+	},
+	revealCells: function (resultCells) {
+		gameScene.setNormalFace();
+
+		resultCells.cells.forEach((cell) => {
+			let index = (cell.Column * gameInitialParameters.fieldSize) + cell.Row;
+
+			if (sceneObjects.mineField.children[index].userData.isFlagged) {
+				sceneObjects.mineField.children[index].userData.isFlagged = false;
+				sceneObjects.mineField.children[index].material[4] = new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 1,
+					roughness: 0.5,
+				});
+
+				gameScene.minesLeft += 1;
+				gameScene.adjustMineCounter(gameScene.minesLeft);
+			}
+
+			let color = textureLoader.pickColor(cell);
+			sceneObjects.mineField.children[index].userData.isOpen = true;
+			sceneObjects.mineField.children[index].material[4].color.set(color);
+		});
 	},
 	backgroundMusic: function() {
 		if (!gameScene.isAudioActive) {
@@ -698,7 +715,6 @@ const textLoader = {
 		});
 	}
 }
-
 
 document.getElementById('minesweeper-form').addEventListener('submit', function (event) {
 	event.preventDefault();
