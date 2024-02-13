@@ -17,7 +17,7 @@ namespace Minesweeper.Helpers
 				return true;
 			}
 
-			return false;
+			return gameProgress.IsGameOver;
 		}
 
 		public static void ResetGameProgress(HttpContext context)
